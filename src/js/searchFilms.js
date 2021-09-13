@@ -2,49 +2,42 @@ import refs from './refs';
 import API from './apiService';
 import galleryCard from '../templates/galleryCard.hbs';
 import showGallery from './app';
-
-var debounce = require('lodash.debounce');
-
-
-
+import parseMoviesObject from './filterGenres';
 const apiService = new API();
 
-refs.searchForm.addEventListener('input', debounce(onSearchFilms, 1500));
+refs.searchForm.addEventListener('submit', onSearchFilms);
+// refs.searchInput.addEventListener('input', resetOnSearch);
 
+console.log(refs.searchInput.value);
 
+// Фукция поиска фильма по вводимому значению
 function onSearchFilms(e) {
   e.preventDefault();
 
-  const value = e.target.value;
+  apiService.query = e.currentTarget.elements.query.value;
   refs.gallery.innerHTML = '';
 
-  apiService.fetchFilmsToId(value).then(res => {
-    addFilmsMarkup(res.results);
+  apiService.fetchFilmsToId().then(res => {
+    const parsedData = parseMoviesObject(res.results);
+    addFilmsMarkup(parsedData);
   });
-
-  if (value === '') {
-
-    showGallery();
-    return;
-  }
+  refs.searchForm.reset();
+  refs.loadMoreBtn.classList.add('visually-hidden');
+  refs.loadMoreToSearchBtn.classList.remove('visually-hidden');
 }
-
-
+// Функция рендерит карточки фильмов с поиска на основную страницу
 function addFilmsMarkup(query) {
   const markup = galleryCard(query);
   refs.gallery.insertAdjacentHTML('beforeend', markup);
-// function addFilmsMarkup(data) {
-//     if (data.length !== 0) {
-//         const markup = galleryCard(data);
-//         refs.gallery.insertAdjacentHTML('beforeend', markup);
-//     }
 }
 
-function onSearchFilms(evt) {
-    evt.preventDefault();
+refs.loadMoreToSearchBtn.addEventListener('click', onLoadMoreFilmToSearch);
 
-    const value = evt.currentTarget.elements.query.value;
-    console.log(value);
-    refs.gallery.innerHTML = '';
-    apiService.fetchFilmsToId(value).then(addFilmsMarkup);
+// // Функция рендерит карточки фильмов с поиска на основную страницу по loadMore
+
+function onLoadMoreFilmToSearch() {
+  apiService.incrementPage();
+  apiService.fetchFilmsToId().then(res => {
+    addFilmsMarkup(parseMoviesObject(res.results));
+  });
 }

@@ -1,74 +1,11 @@
 import movieTpl from '../templates/galleryCard.hbs';
-import genres from './Data/genresData';
 import refs from './refs';
 import API from './apiService';
-
+import parseMoviesObject from './filterGenres';
+// import qwerty from './loader';
 const apiService = new API();
 
-// Функция парсит жанры для карточки галлереи
-// function parseGenres(array) {
-//   return array.map(el => ({
-//     ...el,
-//     genre_ids: el.genre_ids.length
-//       ? [
-//           ...genres.reduce(
-//             (acc, { id, name }) => (
-//               el.genre_ids.includes(+id) 
-//               ? [...acc, name].slice(0, 3) 
-//               : acc), [],
-//           ),
-//         ]
-//       : ['Unknown'],
-//   }));
-// }
-
-// Функция парсит заголовок, дату и жанры для карточки галлереи - Тестовая функция, нужно доделать
-
-function parseMoviesObject(array) {
-  array.forEach(elem => {
-    if (elem.title.length > 35) {
-      elem.title = elem.title.slice(0, 35) + '...';
-    }
-   
-    elem.release_date
-      ? (elem.release_date = elem.release_date.slice(0, 4))
-      : (elem.release_date = 'Unknown');
-
-
-    // Функция от ментора - парсит жанры для карточки галлереи
-    
-  });
-  return array.map(el => ({
-      ...el,
-      genre_ids: el.genre_ids.length
-          ? [...genres.reduce(
-            (acc, { id, name }) => (el.genre_ids.includes(+id) 
-                  ? [...acc, name].slice(0, 2) 
-                  : acc), [],
-              ),]
-          : ['Unknown'],
-      }));;
-}
-=======
-
-    // Функция от ментора - парсит жанры для карточки галлереи
- 
-  });
-  return array.map(el => ({
-      ...el,
-      genre_ids: el.genre_ids.length
-          ? [...genres.reduce(
-            (acc, { id, name }) => (el.genre_ids.includes(+id) 
-                  ? [...acc, name].slice(0, 2) 
-                  : acc), [], 
-              ),]
-          : ['Unknown'],
-      }));;
-}
-
-
-
-
+refs.logo.addEventListener('click', showMainPage);
 
 // Функция выводит список популярных фильмов на основную старницу
 export default function showGallery() {
@@ -82,8 +19,20 @@ showGallery();
 // Функция рендерит карточки фильмов на основной странице
 function renderMoviesList(response) {
   const markup = movieTpl(response);
-  refs.gallery.innerHTML = markup;
+  refs.gallery.insertAdjacentHTML('beforeend', markup);
 }
+//функция добавляет карточки га главной странице
+refs.loadMoreBtn.addEventListener('click', onLoadMore);
+function onLoadMore() {
+  apiService.incrementPage();
+  showGallery();
+}
+//функция отрысовует галерею
 
-
-///////
+function showMainPage() {
+  refs.gallery.innerHTML = '';
+  apiService.resetPage();
+  showGallery();
+  refs.loadMoreBtn.classList.remove('visually-hidden');
+  refs.loadMoreToSearchBtn.classList.add('visually-hidden');
+}
